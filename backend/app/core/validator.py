@@ -1,4 +1,4 @@
-from core.algebra import equations_equal
+from app.core.algebra import equations_equal
 from sympy import Eq
 
 def find_first_error(equations: list[Eq]) -> int | None:
