@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from sympy import sympify
 from app.core.models import StepSchema
-from app.core.parser import parse_equation
+from app.core.parser import parse_equation, parse_expression
 from app.core.validator import find_first_error
-from app.core.models import AlgebraStep
+from app.core.models import Step, Operation
 
 router = APIRouter()
 
@@ -12,16 +12,21 @@ def check_steps(steps: list[StepSchema]):
     equations = []
 
     for i, step in enumerate(steps):
+        print(f"step {i}: operation={step.operation}, wrt={step.wrt}, type={type(step.wrt)}")
         try:
-            equations.append(
-                AlgebraStep(parse_equation(step.expression))
-            )
-        except ValueError as e:
+            if "=" in step.expression:
+                expr = parse_equation(step.expression)
+            else:
+                expr = parse_expression(step.expression)
+            
+            equations.append(Step(expr, step.operation, step.wrt))
+        except Exception as e:
             raise HTTPException(
                 status_code=400,
                 detail={
                     "step": i + 1,
                     "error": str(e),
+                    "type": type(e).__name__,
                 }
             )
 
