@@ -1,24 +1,29 @@
-from sympy import Expr, Eq
+from sympy import Expr, Symbol, Eq
 from dataclasses import dataclass
 from enum import Enum
 
 class Operation(Enum):
-    DIFF = "differentiate"
-    INTEG = "integrate"
-    SIMP = "simplify"
+    DIFFERENTIATE = "differentiate"
+    INTEGRATE = "integrate"
+    SIMPLIFY = "simplify"
+    EVALUATE = "evaluate" # substitution
 
-@dataclass
-class AlgebraStep:
-    equation: Eq
-    operation: Operation | None = None
-
-@dataclass
-class CalculusStep:
+class Step:
     expression: Expr
-    operation: Operation
+    operation: Operation = Operation.SIMPLIFY
+    wrt: Symbol | None = None
+
+    def __init__(self, expression, operation, wrt=None):
+        self.expression = expression
+        self.operation = operation
+        self.wrt = wrt
+
+    def free_symbols(self):
+        return self.expression.free_symbols
 
 from pydantic import BaseModel
 
 class StepSchema(BaseModel):
     expression: str
-    operation: Operation | None = None
+    operation: Operation
+    wrt: str | None = None
