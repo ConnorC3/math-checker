@@ -1,59 +1,72 @@
-from app.core.algebra import equations_equal
-from sympy import Eq, symbols, sin, cos
+"""Tests for algebra.py — _equations_equivalent"""
 
-##### Test equations_equal  #####
+import pytest
+from sympy import Symbol, Eq
+from app.core.algebra import _equations_equivalent
 
-x, y = symbols("x y")
+x = Symbol('x')
+y = Symbol('y')
 
-def test_basic_valid_equation():
-    eq1 = Eq(2*x + 3, 7)
-    eq2 = Eq(2*x, 4)
-    assert equations_equal(eq1, eq2)  # valid linear algebra step
 
-def test_basic_invalid_equation():
-    eq1 = Eq(2*x + 3, 7)
-    eq2 = Eq(2*x, 5)
-    assert not equations_equal(eq1, eq2)  # deliberately wrong
+class TestEquationsEqual:
+    # --- Equivalent equations ---
 
-def test_simplification_equivalence():
-    # Different forms but equivalent
-    eq1 = Eq((x + 1)**2, x**2 + 2*x + 1)
-    eq2 = Eq(x**2 + 2*x + 1, (x + 1)**2)
-    assert equations_equal(eq1, eq2)
+    def test_identical_equations(self):
+        eq = Eq(2*x + 4, 10)
+        assert _equations_equivalent(eq, eq) is True
 
-### Not testing multivariable equations right now
+    def test_rearranged_same_solution(self):
+        # 2x + 4 = 10  and  2x = 6 both solve to x=3
+        eq1 = Eq(2*x + 4, 10)
+        eq2 = Eq(2*x, 6)
+        assert _equations_equivalent(eq1, eq2) is True
 
-# def test_multiple_variables_valid():
-#     eq1 = Eq(2*x + 3*y, 5)
-#     eq2 = Eq(2*x, 5 - 3*y)
-#     assert equations_equal(eq1, eq2)
+    def test_fully_simplified(self):
+        eq1 = Eq(2*x, 6)
+        eq2 = Eq(x, 3)
+        assert _equations_equivalent(eq1, eq2) is True
 
-# def test_multiple_variables_invalid():
-#     eq1 = Eq(2*x + 3*y, 5)
-#     eq2 = Eq(2*x, 5 - 2*y)  # wrong coefficient
-#     assert not equations_equal(eq1, eq2)
+    def test_different_form_same_roots(self):
+        # x^2 - 5x + 6 = 0  and  (x-2)(x-3) = 0
+        eq1 = Eq(x**2 - 5*x + 6, 0)
+        eq2 = Eq((x - 2)*(x - 3), 0)
+        assert _equations_equivalent(eq1, eq2) is True
 
-def test_trivial_case():
-    eq1 = Eq(x, x, evaluate=False)
-    eq2 = Eq(x, x, evaluate=False)
-    assert equations_equal(eq1, eq2)
+    def test_scaled_equation(self):
+        # 4x = 12  same as  x = 3
+        eq1 = Eq(4*x, 12)
+        eq2 = Eq(x, 3)
+        assert _equations_equivalent(eq1, eq2) is True
 
-def test_constant_equation():
-    eq1 = Eq(3, 3, evaluate=False)
-    eq2 = Eq(3, 3, evaluate=False)
-    assert equations_equal(eq1, eq2)
+    # --- Non-equivalent equations ---
 
-def test_constant_mismatch():
-    eq1 = Eq(3, 3, evaluate=False)
-    eq2 = Eq(3, 4, evaluate=False)
-    assert not equations_equal(eq1, eq2)
+    def test_different_solutions(self):
+        eq1 = Eq(x, 3)
+        eq2 = Eq(x, 4)
+        assert _equations_equivalent(eq1, eq2) is False
 
-# def test_nested_expression_equivalence():
-#     eq1 = Eq((x + y)**2, x**2 + 2*x*y + y**2)
-#     eq2 = Eq(x**2 + 2*x*y + y**2, (x + y)**2)
-#     assert equations_equal(eq1, eq2)
+    def test_different_solution_sets(self):
+        # x^2 = 4 has solutions {-2, 2}; x = 2 has {2}
+        eq1 = Eq(x**2, 4)
+        eq2 = Eq(x, 2)
+        assert _equations_equivalent(eq1, eq2) is False
 
-def test_trig_equation():
-    eq1 = Eq(sin(x)**2 + cos(x)**2, 1, evaluate=False)
-    eq2 = Eq(1, 1, evaluate=False)
-    assert equations_equal(eq1, eq2)
+    # --- Constant equations (no symbols) ---
+
+    def test_true_constant_equation(self):
+        eq1 = Eq(4, 4)
+        eq2 = Eq(2 + 2, 4)
+        assert _equations_equivalent(eq1, eq2) is True
+
+    def test_false_constant_equation(self):
+        eq1 = Eq(4, 4)
+        eq2 = Eq(4, 5)
+        assert _equations_equivalent(eq1, eq2) is False
+
+    # --- Error cases ---
+
+    def test_multi_variable_raises(self):
+        eq1 = Eq(x + y, 5)
+        eq2 = Eq(x, 5 - y)
+        with pytest.raises(ValueError, match="single-variable"):
+            _equations_equivalent(eq1, eq2)
