@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api.check import router as check_router
+from app.api import check, history
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -16,4 +16,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(check_router)
+app.include_router(check.router)
+app.include_router(history.router)
