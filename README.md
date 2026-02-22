@@ -68,7 +68,7 @@ npm install
 npm run dev
 ```
 
-Frontend runs on `http://localhost:3000`, backend on `http://localhost:8000`.
+Frontend runs on `http://localhost:3000`, backend on `http://127.0.0.1:8000`.
 
 ### Tests
 
