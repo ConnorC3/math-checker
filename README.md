@@ -56,7 +56,7 @@ math-checker/
 
 ```bash
 cd backend
-pip install fastapi uvicorn sympy httpx
+pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
